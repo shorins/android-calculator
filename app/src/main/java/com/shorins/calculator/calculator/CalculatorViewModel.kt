@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import kotlin.math.sqrt
 
 class CalculatorViewModel : ViewModel() {
 
@@ -18,6 +19,41 @@ class CalculatorViewModel : ViewModel() {
             is CalculatorAction.Delete -> performDeletion()
             is CalculatorAction.Clear -> state = CalculatorState()
             is CalculatorAction.Calculate -> performCalculation()
+            is CalculatorAction.Percent -> performPercent()
+            is CalculatorAction.SquareRoot -> performSquareRoot()
+            is CalculatorAction.SignChange -> performSignChange()
+        }
+    }
+
+    private fun performSignChange() {
+        if (state.number2.isNotBlank()) {
+            val number = state.number2.toDoubleOrNull() ?: return
+            state = state.copy(number2 = formatResult(number * -1))
+        } else if (state.number1.isNotBlank()) {
+            val number = state.number1.toDoubleOrNull() ?: return
+            state = state.copy(number1 = formatResult(number * -1))
+        }
+    }
+
+    private fun performSquareRoot() {
+        if (state.number1.isNotBlank()) {
+            val number = state.number1.toDoubleOrNull() ?: return
+            state = state.copy(
+                number1 = formatResult(sqrt(number)),
+                number2 = "",
+                operation = null
+            )
+        }
+    }
+
+    private fun performPercent() {
+        // Логика процента: 50 + 10% = 55
+        val number1 = state.number1.toDoubleOrNull()
+        val number2 = state.number2.toDoubleOrNull()
+
+        if (number1 != null && number2 != null) {
+            val result = number1 * (number2 / 100.0)
+            state = state.copy(number2 = formatResult(result))
         }
     }
 
@@ -74,11 +110,19 @@ class CalculatorViewModel : ViewModel() {
                 null -> return
             }
             state = state.copy(
-                number1 = result.toString().take(15),
+                number1 = formatResult(result),
                 number2 = "",
                 operation = null
             )
         }
+    }
+
+    private fun formatResult(number: Double): String {
+        return if (number % 1.0 == 0.0) {
+            number.toLong().toString()
+        } else {
+            number.toString()
+        }.take(15) // Ограничиваем длину, чтобы не вылезать за экран
     }
 
     companion object {
