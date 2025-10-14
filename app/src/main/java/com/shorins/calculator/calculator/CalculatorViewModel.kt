@@ -51,9 +51,23 @@ class CalculatorViewModel : ViewModel() {
         val number1 = state.number1.toDoubleOrNull()
         val number2 = state.number2.toDoubleOrNull()
 
+        // Сценарий 1: Введено только одно число (5 -> %)
+        if (number1 != null && state.operation == null && state.number2.isBlank()) {
+            val result = number1 / 100.0
+            state = state.copy(number1 = formatResult(result))
+            return
+        }
+
+        // Сценарий 2: Введено выражение (100 + 10 %)
         if (number1 != null && number2 != null) {
-            val result = number1 * (number2 / 100.0)
-            state = state.copy(number2 = formatResult(result))
+            val percentageValue = when(state.operation) {
+                // Для сложения/вычитания: 100 + 10% -> 100 + (100 * 0.1) -> второе число становится 10
+                is CalculatorOperation.Add, is CalculatorOperation.Subtract -> number1 * number2 / 100.0
+                // Для умножения/деления: 100 * 10% -> 100 * 0.1 -> второе число становится 0.1
+                is CalculatorOperation.Multiply, is CalculatorOperation.Divide -> number2 / 100.0
+                null -> return // Безопасная проверка
+            }
+            state = state.copy(number2 = formatResult(percentageValue))
         }
     }
 
