@@ -1,16 +1,43 @@
 package com.shorins.calculator.calculator
 
+import android.app.Application
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import kotlin.math.abs
 import kotlin.math.sqrt
 
-class CalculatorViewModel : ViewModel() {
+class CalculatorViewModel(application: Application) : AndroidViewModel(application) {
 
-    var state by mutableStateOf(CalculatorState())
+    private val sharedPreferences = application.getSharedPreferences("CalculatorState", Context.MODE_PRIVATE)
+
+    var state by mutableStateOf(loadState())
         private set
+
+    private fun saveState(state: CalculatorState) {
+        sharedPreferences.edit().apply {
+            putString("number1", state.number1)
+            putString("number2", state.number2)
+            putString("operation", state.operation?.symbol)
+            apply()
+        }
+    }
+
+    private fun loadState(): CalculatorState {
+        val number1 = sharedPreferences.getString("number1", "") ?: ""
+        val number2 = sharedPreferences.getString("number2", "") ?: ""
+        val operationSymbol = sharedPreferences.getString("operation", null)
+        val operation = when (operationSymbol) {
+            "+" -> CalculatorOperation.Add
+            "-" -> CalculatorOperation.Subtract
+            "×" -> CalculatorOperation.Multiply
+            "÷" -> CalculatorOperation.Divide
+            else -> null
+        }
+        return CalculatorState(number1, number2, operation)
+    }
 
     fun onAction(action: CalculatorAction) {
         when (action) {
@@ -24,6 +51,7 @@ class CalculatorViewModel : ViewModel() {
             is CalculatorAction.SquareRoot -> performSquareRoot()
             is CalculatorAction.SignChange -> performSignChange()
         }
+        saveState(state)
     }
 
     private fun performSignChange() {
