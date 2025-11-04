@@ -1,10 +1,13 @@
 package com.shorins.calculator.calculator
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,17 +39,33 @@ fun CalculatorScreen(
                 .align(Alignment.BottomCenter),
             verticalArrangement = Arrangement.spacedBy(buttonSpacing)
         ) {
-            Text(
-                text = state.number1 + (state.operation?.symbol ?: "") + state.number2,
-                textAlign = TextAlign.End,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 32.dp),
-                fontWeight = FontWeight.Light,
-                fontSize = 80.sp,
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 2
-            )
+            val text = state.number1 + (state.operation?.symbol ?: "") + state.number2
+            val scrollState = rememberScrollState()
+
+            LaunchedEffect(text) {
+                scrollState.animateScrollTo(scrollState.maxValue)
+            }
+
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = text,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(scrollState)
+                        .padding(vertical = 32.dp),
+                    fontWeight = FontWeight.Light,
+                    fontSize = when {
+                        text.length > 12 -> 40.sp
+                        text.length > 9 -> 55.sp
+                        text.length > 6 -> 70.sp
+                        else -> 80.sp
+                    },
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    softWrap = false
+                )
+            }
             // Ряд 1
             Row(
                 modifier = Modifier.fillMaxWidth(),

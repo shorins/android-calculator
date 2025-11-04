@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import kotlin.math.abs
 import kotlin.math.sqrt
 
 class CalculatorViewModel : ViewModel() {
@@ -132,14 +133,21 @@ class CalculatorViewModel : ViewModel() {
     }
 
     private fun formatResult(number: Double): String {
-        return if (number % 1.0 == 0.0) {
-            number.toLong().toString()
+        val longValue = number.toLong()
+        // Если число очень большое или очень маленькое (но не ноль), используем научную нотацию
+        if (abs(number) > 999_999_999_999.0 || (abs(number) < 0.0001 && number != 0.0)) {
+            return String.format("%.6E", number)
+        }
+
+        // Если это целое число в пределах Long, форматируем без десятичной части
+        return if (number == longValue.toDouble()) {
+            longValue.toString()
         } else {
             number.toString()
-        }.take(15) // Ограничиваем длину, чтобы не вылезать за экран
+        }.take(15) // Ограничиваем длину для отображения
     }
 
     companion object {
-        private const val MAX_NUM_LENGTH = 8
+        private const val MAX_NUM_LENGTH = 15
     }
 }
